@@ -1,0 +1,38 @@
+{
+  "name": "google-docs-markup",
+  "version": "0.1.0",
+  "description": "Builds an Abstract Syntax Tree out of a Google Doc.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/.bin/mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huffpostdata/google-docs-markup.git"
+  },
+  "keywords": [
+    "google",
+    "docs",
+    "markup",
+    "rendering",
+    "template",
+    "engine",
+    "parser",
+    "abstract",
+    "syntax",
+    "tree"
+  ],
+  "author": "Adam Hooper <adam@adamhooper.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/huffpostdata/google-docs-markup/issues"
+  },
+  "homepage": "https://github.com/huffpostdata/google-docs-markup#readme",
+  "dependencies": {
+    "htmlparser2": "^3.9.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  }
+}
