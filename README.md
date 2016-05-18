@@ -97,12 +97,56 @@ Texts always have a `text` attribute. They can also have:
 
 There are no empty texts.
 
-Here's the nifty thing: you probably aren't going to output underlined text.
-Who even does that these days? So we recommend you use underlined text as
-"code": for example, in the Google Doc, underline something like `render(...)`
-and then pass that underlined text to something `eval()`-ish. Get creative :).
+# Tips and tricks
 
-# Developing
+## Use underline to build a templating engine
+
+Here's the nifty thing: you probably aren't going to output underlined text.
+Who even does that these days? So we recommend you underline *code*.
+
+For example, in the Google Doc, underline something like `render(...)`. Then
+when you're walking through your blocks and texts, treat any text with
+`underline:true` as code: parse it and run it.
+
+Beware smart quotes: Google Docs usually turns `render("foo")` into
+`render(“foo”)`, which is invalid in most programming languages. If you make
+your syntax require double-quotes (`"`), journalists and developers alike will
+break the code frequently. Our solution is to parse backticks (`\``) as
+double-quotes. Google Docs leaves `render(\`foo\`)` alone.
+
+## Include instructions above a page break
+
+We maintain [an example Google Doc](https://docs.google.com/document/d/1qLoJYmUEJvpQdP4Xplp6I5JBsMpRY9RZTnak2gPhiEQ)
+that shows off all features. It doubles as a page of instructions.
+
+Copy/paste that page into a fresh Google Doc. Delete everything after the first
+page. Leave the page break behind, and make sure it's on its own line. Start
+your story on page 2.
+
+The instructions will help journalists with syntax. And you can easily drop
+everything before the first page break. For instance:
+
+```javascript
+// get blocks
+var html = ...;
+var blocks = gdm.parse_google_docs_html(html);
+
+// Ignore every block _before_ the first page break.
+// If there's no page break, the while condition will crash. That's good.
+while (blocks[0].type !== 'page-break') {
+  blocks.shift();
+}
+
+// blocks[0] is the page break. Nix it as well.
+blocks.shift();
+```
+
+You can adapt this strategy to your newsroom. For instance, if you want to
+maintain a to-do list in the Google Doc, put that before the page break. If
+you want more notes at the bottom of the Google Doc, put them below a second
+page break and adjust your code to match.
+
+# Adding features and fixing bugs
 
 1. Run `node_modules/.bin/mocha -w` and verify all tests pass
 2. Write a new test in the `test/` directory and verify that mocha reports failure
