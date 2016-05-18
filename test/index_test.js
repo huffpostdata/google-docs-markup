@@ -73,5 +73,14 @@ describe('index', () => {
     it('should parse a page-break', () => {
       expect(output[11]).to.deep.eq({ type: 'page-break' })
     })
+
+    it('should parse a link', () => {
+      const li = output[2].blocks[4];
+      expect(li.texts).to.deep.eq([
+        { text: 'Use ' },
+        { text: 'absolute links', href: 'http://whatis.techtarget.com/definition/absolute-link' },
+        { text: ' as in any Google Docs, to link to other stories on other websites.' }
+      ])
+    })
   })
 })

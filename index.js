@@ -1,13 +1,15 @@
 'use strict'
 
 const htmlparser = require('htmlparser2')
+const querystring = require('querystring')
 
 class Text {
-  constructor(text, bold, italic, underline) {
+  constructor(text, bold, italic, underline, href) {
     this.text = text
     if (bold) this.bold = true
     if (italic) this.italic = true
     if (underline) this.underline = true
+    if (href) this.href = href
   }
 }
 
@@ -104,6 +106,22 @@ class CssStyle {
   }
 }
 
+// Returns the URL we want from the given <a>'s `href`.
+//
+// Google Docs gives us something like https://www.google.com/url?q=http://whatis.techtarget.com/definition/absolute-link&amp;sa=D&amp;ust=1461346989252000&amp;usg=AFQjCNFFy1rqPkARlwWuYtcWV9C-AhRPSg ... which means we want http://whatis.techtarget.com/definition/absolute-link
+//
+// TODO figure out the encoding mechanism. We know it isn't encodeURIComponent()
+// because the slashes aren't `%2F`.
+function parse_href(href) {
+  const index = href.indexOf('?')
+  if (index === -1) throw new Error(`Got an <a> href from Google Docs we did not expect: ${href}`)
+
+  const params = querystring.parse(href.substring(index + 1))
+  if (!params.q) throw new Error(`This <a> href from Google Docs did not contain a 'q': ${href}`)
+
+  return params.q
+}
+
 // Takes in an Array of texts; outputs an array in which identically-styled
 // texts are merged together.
 //
@@ -116,12 +134,16 @@ function normalize_texts(texts) {
   let cur_text = texts[0] // Holds the styles in this group of texts
 
   for (const text of texts) {
-    if (text.bold !== cur_text.bold || text.italic !== cur_text.italic || text.underline !== cur_text.underline) {
+    if (text.bold !== cur_text.bold
+        || text.italic !== cur_text.italic
+        || text.underline !== cur_text.underline
+        || text.href !== cur_text.href) {
       ret.push(new Text(
         content.join(''),
         cur_text.bold,
         cur_text.italic,
-        cur_text.underline
+        cur_text.underline,
+        cur_text.href
       ))
       cur_text = text
       content = []
@@ -135,7 +157,8 @@ function normalize_texts(texts) {
     content.join(''),
     cur_text.bold,
     cur_text.italic,
-    cur_text.underline
+    cur_text.underline,
+    cur_text.href
   ))
 
   return ret
@@ -148,9 +171,10 @@ function create_parser() {
   let in_table = false
   let style_texts = null  // Array when we're in a <style>. (Parser may give many texts).
   let blocks = null       // Array when we're in a <ol> or <ul>
-  let texts = null      // Array when we're in a <hN>, <p> or <li>
+  let texts = null        // Array when we're in a <hN>, <p> or <li>
   let span_texts = null   // Text when we're in a <span>. (Parser may give many texts.)
   let span_classes = null // HTML "class"es when we're in a <span>
+  let span_href = null    // HTML will be <span><a>blah</a></span>; this holds the href
 
   function onopentag(name, attributes) {
     if (in_table) return;
@@ -177,6 +201,14 @@ function create_parser() {
         span_classes = (attributes['class'] || '')
           .split(' ')
           .filter((s) => /c\d+/.test(s))
+        break
+      case 'a':
+        // Some of these are internal "<a id='#abcd...'>", which we can ignore
+
+        if (attributes.href) {
+          span_href = parse_href(attributes.href)
+          // We don't need to watch for the closing tag: it'll be `</a></span>`
+        }
         break
       case 'hr':
         if (/\bpage-break-before:always\b/.test(attributes.style || '')) {
@@ -235,7 +267,9 @@ function create_parser() {
       case 'h4':
         close_simple_block(name, output)
         break
-      case 'li': close_simple_block(name, blocks); break
+      case 'li':
+        close_simple_block(name, blocks)
+        break
       case 'p':
         const container = blocks === null ? output : blocks
         close_simple_block(name, container)
@@ -252,12 +286,15 @@ function create_parser() {
             text,
             span_classes.some((c) => css_style.bold.has(c)),
             span_classes.some((c) => css_style.italic.has(c)),
-            span_classes.some((c) => css_style.underline.has(c))
+            // Google Docs underlines `<span><a>` elements. We don't.
+            span_href === null && span_classes.some((c) => css_style.underline.has(c)),
+            span_href
           ))
-          break
         }
+
         span_texts = null
         span_classes = null
+        span_href = null
         break
       default:
         // ignore the tag
