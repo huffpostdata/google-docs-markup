@@ -101,3 +101,29 @@ Here's the nifty thing: you probably aren't going to output underlined text.
 Who even does that these days? So we recommend you use underlined text as
 "code": for example, in the Google Doc, underline something like `render(...)`
 and then pass that underlined text to something `eval()`-ish. Get creative :).
+
+# Developing
+
+1. Run `node_modules/.bin/mocha -w` and verify all tests pass
+2. Write a new test in the `test/` directory and verify that mocha reports failure
+3. Edit code in `index.js` until tests pass
+4. `git commit -a` with a descriptive message
+5. Repeat from step 2 until this library has all the features you want and no bugs you know of
+6. `git push`
+
+## Releasing
+
+After you've developed, you probably want other people to use your changes.
+
+So publish to [npm](http://npmjs.com):
+
+1. Edit `package.json` and set a new [semantic version](http://semver.org/) number.
+2. `git commit package.json`
+3. `git push`
+4. `npm publish`
+
+Then make your other projects depend on this new version:
+
+```
+npm install --save google-docs-markup
+```
