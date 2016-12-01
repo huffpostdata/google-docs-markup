@@ -81,28 +81,18 @@ class PageBreak {
   }
 }
 
-// Parses CSS questions, and then answers: is [class name] italic? bold? etc
 class CssStyle {
-  constructor(text) {
-    this.bold = new Set()
-    this.italic = new Set()
-    this.underline = new Set()
+  constructor(text, parentProperties) {
+    // We assume Google Docs doesn't "un-underline", etc.
+    Object.assign(this, parentProperties, this._parse(text))
+  }
 
-    // Look for ".c12{...}". We only care about the ".cNN" classes.
-    const rule_set_re = /\.(c\d+){([^}]*)}/g
-    const bold_re = /\bfont-weight:bold\b/
-    const italic_re = /\bfont-style:italic\b/
-    const underline_re = /\btext-decoration:underline\b/
-
-    let m
-    while ((m = rule_set_re.exec(text)) !== null) {
-      const selector = m[1]
-      const rules = m[2]
-
-      if (bold_re.test(rules)) this.bold.add(selector)
-      if (italic_re.test(rules)) this.italic.add(selector)
-      if (underline_re.test(rules)) this.underline.add(selector)
-    }
+  _parse(text) {
+    const ret = {}
+    if (/\bfont-weight:bold\b/.test(text)) ret.bold = true
+    if (/\bfont-style:italic\b/.test(text)) ret.italic = true
+    if (/\btext-decoration:underline\b/.test(text)) ret.underline = true
+    return ret
   }
 }
 
@@ -168,19 +158,28 @@ function create_parser() {
   let css_style = null
 
   const output = []       // Array of blocks
+
   let in_table = false
+  let in_editor_comments = false
   let style_texts = null  // Array when we're in a <style>. (Parser may give many texts).
   let blocks = null       // Array when we're in a <ol> or <ul>
   let texts = null        // Array when we're in a <hN>, <p> or <li>
   let span_texts = null   // Text when we're in a <span>. (Parser may give many texts.)
-  let span_classes = null // HTML "class"es when we're in a <span>
+  let block_style = null  // CssStyle
+  let span_style = null   // CssStyle
   let span_href = null    // HTML will be <span><a>blah</a></span>; this holds the href
 
   function onopentag(name, attributes) {
-    if (in_table) return;
+    if (in_table) return
+    if (in_editor_comments) return
 
     switch (name) {
-      case 'table': in_table = true; break
+      case 'table':
+        in_table = true
+        break
+      case 'div':
+        in_editor_comments = true
+        break
       case 'style':
         style_texts = []
         break
@@ -191,6 +190,7 @@ function create_parser() {
       case 'li':
       case 'p':
         texts = []
+        block_style = new CssStyle(attributes.style)
         break
       case 'ol':
       case 'ul':
@@ -198,14 +198,11 @@ function create_parser() {
         break
       case 'span':
         span_texts = []
-        span_classes = (attributes['class'] || '')
-          .split(' ')
-          .filter((s) => /c\d+/.test(s))
+        span_style = new CssStyle(attributes.style, block_style)
         break
       case 'a':
         // Some of these are internal "<a id='#abcd...'>", which we can ignore
-
-        if (attributes.href) {
+        if (attributes.href && !/^#cmnt\d/.test(attributes.href)) {
           span_href = parse_href(attributes.href)
           // We don't need to watch for the closing tag: it'll be `</a></span>`
         }
@@ -246,21 +243,22 @@ function create_parser() {
       container.push(b)
     }
 
+    block_style = null
     texts = null
   }
 
   function onclosetag(name) {
     if (in_table) {
-      if (name == 'table') in_table = false
+      if (name === 'table') in_table = false
+      return
+    }
+
+    if (in_editor_comments) {
+      if (name === 'div') in_editor_comments = false
       return
     }
 
     switch (name) {
-      case 'style':
-        const style_text = style_texts.join('')
-        style_texts = null
-        css_style = new CssStyle(style_text)
-        break
       case 'h1':
       case 'h2':
       case 'h3':
@@ -284,17 +282,17 @@ function create_parser() {
         if (text) {
           texts.push(new Text(
             text,
-            span_classes.some((c) => css_style.bold.has(c)),
-            span_classes.some((c) => css_style.italic.has(c)),
+            span_style.bold === true,
+            span_style.italic === true,
             // Google Docs underlines `<span><a>` elements. We don't.
-            span_href === null && span_classes.some((c) => css_style.underline.has(c)),
+            span_href === null && span_style.underline === true,
             span_href
           ))
         }
 
         span_texts = null
-        span_classes = null
         span_href = null
+        span_style = null
         break
       default:
         // ignore the tag
