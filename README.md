@@ -44,28 +44,9 @@ Install [google-docs-console-download](https://github.com/huffpostdata/google-do
 
     npm install --save-dev google-docs-console-download
 
-Create Google Auth credentials:
-
-1. Browse to https://console.developers.google.com/apis/dashboard and
-   "Create Project". We'll use the example name "my-google-docs-project" here.
-2. Browse to the "Credentials" section. Choose "Create Credentials" and then
-   "OAuth client ID".
-3. "Configure consent screen". You only have to fill in "Product name"; write
-   anything (e.g., "my-google-docs-project"). Click "Save".
-4. Back at "Create client ID", choose Application type "Other" and enter
-   "google-docs-console-download". Click "Save".
-5. Close the popup. Find and click the "Download JSON" button on the
-   "google-docs-console-download" line.
-6. Save the resulting JSON as "config/google-docs-console-download-auth.json". We'll
-   use the same filename later. *Do* save this authentication data in your
-   project's code repository, and *do* publish it if you publish your project's
-   source code. It's [not secret](https://developers.google.com/identity/protocols/OAuth2InstalledApp)
-   in this use case. It doesn't give anybody access to any files.
-
 Create a function to download a file:
 
-    const auth_config = require('./config/google-docs-console-download-auth')
-    const gdcd = require('google-docs-console-download')(auth_config)
+    const gdcd = require('google-docs-console-download')(null)
 
     function downloadGoogleDocAsBlocks(docId, callback) {
       gdcd.download(docId, (err, html) => {
