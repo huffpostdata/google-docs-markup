@@ -89,7 +89,7 @@ class CssStyle {
 
   _parse(text) {
     const ret = {}
-    if (/\bfont-weight:bold\b/.test(text)) ret.bold = true
+    if (/\bfont-weight:(bold|[789]00)\b/.test(text)) ret.bold = true
     if (/\bfont-style:italic\b/.test(text)) ret.italic = true
     if (/\btext-decoration:underline\b/.test(text)) ret.underline = true
     return ret
