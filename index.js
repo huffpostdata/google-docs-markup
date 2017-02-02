@@ -103,6 +103,8 @@ class CssStyle {
 // TODO figure out the encoding mechanism. We know it isn't encodeURIComponent()
 // because the slashes aren't `%2F`.
 function parse_href(href) {
+  if (href.slice(0, 7) === 'mailto:') return href
+
   const index = href.indexOf('?')
   if (index === -1) throw new Error(`Got an <a> href from Google Docs we did not expect: ${href}`)
 

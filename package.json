@@ -1,6 +1,6 @@
 {
   "name": "google-docs-markup",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Builds an Abstract Syntax Tree out of a Google Doc.",
   "main": "index.js",
   "scripts": {

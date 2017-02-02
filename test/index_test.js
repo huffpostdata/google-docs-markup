@@ -82,5 +82,14 @@ describe('index', () => {
         { text: ' as in any Google Docs, to link to other stories on other websites.' }
       ])
     })
+
+    it('should parse a mailto: link', () => {
+      const example_html = '<html><body><p><span>Here is a </span><span><a href="mailto:foo@bar.com">mailto a tag</a></span></p></body></html>'
+      const output = index.parse_google_docs_html(example_html)
+      expect(output[0].texts).to.deep.eq([
+        { text: 'Here is a ' },
+        { text: 'mailto a tag', href: 'mailto:foo@bar.com' }
+      ])
+    })
   })
 })
