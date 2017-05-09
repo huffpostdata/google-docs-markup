@@ -286,7 +286,7 @@ function create_parser() {
         break
       case 'ol': output.push(new Ol(blocks)); blocks = null; break
       case 'ul': output.push(new Ul(blocks)); blocks = null; break
-      case 'img': output.push(new Image(src));
+      case 'img': output.push(new Image(src)); break;
       case 'span':
         const text = span_texts
           .join('')
