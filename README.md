@@ -108,11 +108,14 @@ const blocks = [
     { text: ', ' },
     { text: 'bold italics', italic: true, bold: true },
     { text: ' and ' },
+    { text: 'links', href: '#' },
+    { text: ' and ' },
     { text: 'underlines', underline: true },
     { text: '.' }
   ] },
   { type: 'page-break' },
   { type: 'hr' },
+  { type: 'img', src: '#' },
   { type: 'ul', blocks: [
     { type: 'li', texts: [ { text: 'List item' } ] }
   ] },
@@ -134,6 +137,7 @@ Blocks can have these types, derived from HTML:
 * `p`: paragraph. Contains texts.
 * `ul`, `ol`: lists. Contain `li` blocks.
 * `li`: list item. Contains texts.
+* `img`: image. Contains src.
 * `hr`: horizontal rule. Contains nothing.
 * `page-break`: page break. Contains nothing. Not HTML.
 
@@ -152,6 +156,7 @@ Texts always have a `text` attribute. They can also have:
 * `italic`: true if the text is italicized in the Google Doc
 * `bold`: true if the text is bolded in the Google Doc
 * `underline`: true if the text is underlined in the Google Doc
+* `href`: set if the text was originally a link.
 
 There are no empty texts.
 

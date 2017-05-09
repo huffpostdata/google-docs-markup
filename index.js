@@ -75,6 +75,13 @@ class Hr {
   }
 }
 
+class Image {
+  constructor(src) {
+    this.type = 'img'
+    this.src = src;
+  }
+}
+
 class PageBreak {
   constructor() {
     this.type = 'page-break'
@@ -170,6 +177,7 @@ function create_parser() {
   let block_style = null  // CssStyle
   let span_style = null   // CssStyle
   let span_href = null    // HTML will be <span><a>blah</a></span>; this holds the href
+  let src = null;
 
   function onopentag(name, attributes) {
     if (in_table) return
@@ -209,6 +217,8 @@ function create_parser() {
           // We don't need to watch for the closing tag: it'll be `</a></span>`
         }
         break
+      case 'img':
+        src = attributes.src
       case 'hr':
         if (/\bpage-break-before:always\b/.test(attributes.style || '')) {
           output.push(new PageBreak())
@@ -276,6 +286,7 @@ function create_parser() {
         break
       case 'ol': output.push(new Ol(blocks)); blocks = null; break
       case 'ul': output.push(new Ul(blocks)); blocks = null; break
+      case 'img': output.push(new Image(src)); break;
       case 'span':
         const text = span_texts
           .join('')
